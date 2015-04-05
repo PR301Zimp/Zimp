@@ -1,6 +1,12 @@
+from zimpDataInit import *
+from FileManager import *
+
 DOOR = OPEN = True
 BLOCKED = HEDGE = False
 NO_MESSAGE = ''
+START_TIME = '21:00'
+GAME_NAME = 'Zombie on my Screen'
+FILE_NAME = "ZIMPsave.db"
 
 def deleteAll():
     pass
@@ -23,13 +29,14 @@ class OutdoorTile(Tile):
     pass
 
 class Player(object):
-    def __init__(self, item1 = None, item2 = None, x = 0, y = 0, health = 6, totem=False):
-        self.item1 = None
-        self.item2 = None
-        self.x = 0
-        self.y = 0
-        self.health = 6
-        self.totem = False
+    def __init__(self, name = "New Player", item1 = None, item2 = None, x = 0, y = 0, health = 6, totem=False):
+        self.name = name
+        self.item1 = item1
+        self.item2 = item2
+        self.x = x
+        self.y = y
+        self.health = health
+        self.totem = totem
 
     def getLoc(self):
         return self.x,self.y
@@ -57,33 +64,58 @@ class Game(object):
         self.actionCards = []
         self.actionCardsCurrent = []
         self.map = {}
+        self.allItems = {}
+        self.player = Player()
+        self.turn = None 
+        
+    def saveGame(self, name):
+        fileManager = FileManager(FILE_NAME)
+        fileManager.saveGame([self.allIndoorTiles, self.allOutDoorTiles, self.time, self.actionCards, self.actionCardsCurrent, self.map, self.allItems, self.player, self.turn], name)
+    
+    def loadGame(self, saveName):
+        fileManager = FileManager(FILE_NAME)
+        data = fileManager.loadGame(saveName)
+        self.allIndoorTiles = data[0]
+        self.allOutDoorTiles = data[1]
+        self.time = data[2]
+        self.actionCards = data[3]
+        self.actionCardsCurrent = data[4]
+        self.map = data[5]
+        self.allItems = data[6]
+        self.player = data[7]
+        self.turn = data[8]         
+        
+    
+    def viewSavedGames(self):
+        fileManager = FileManager(FILE_NAME)
+        data = fileManager.savedGames
+        return data
 
-
-    def resetPlayer(self, name, attack, health):
-        pass
+    def resetPlayer(self, name = 'Innocent Victim',  health = 6):
+        self.player = Player(name=name, health=health)
 
     def addTile(self,  type, name, north, east, south, west, message):
         if(type == IndoorTile):
-            inDoorTemp = IndoorTile(name, north, east, south, west, message)
-            self.allIndoorTiles[name] = inDoorTemp
+            self.allIndoorTiles[name] = IndoorTile(name, north, east, south, west, message)
         elif(type == OutdoorTile):
-            outDoorTemp = OutdoorTile(name, north, east, south, west, message)
-            self.allIndoorTiles[name] = outDoorTemp
+            self.allOutDoorTiles[name] = OutdoorTile(name, north, east, south, west, message)
 
     def setStartTile(self,  name ):
         pass
     def setTileAside(self,  name):
         pass
     def addItem(self,  name , damage, message, uses):
-        pass
+        self.allItems[name] = Item(name, damage, message, uses)
     def addMessage(self, message, timeWasted):
         pass
+    def addActionCard(self, item, msgNine, msgTen, msgEleven):
+        self.actionCards.append(ActionCard(item, msgNine, msgTen, msgEleven))
 
 def main():
     deleteAll()
-    game = Game( 'Zombie on my Screen', '21:00' )
-    game.resetPlayer( 'Innocent Victim', 1, 6 )
-    # indoors
+    game = Game( GAME_NAME, START_TIME )
+    game.resetPlayer( 'Innocent Victim', 6 )
+    
     game.addTile( IndoorTile, 'Bathroom', DOOR, BLOCKED, BLOCKED, BLOCKED, NO_MESSAGE )
     game.addTile( IndoorTile, 'Kitchen', DOOR, DOOR, BLOCKED, DOOR, '+1 health if end move here' )
     game.addTile( IndoorTile, 'Storage', DOOR, BLOCKED, BLOCKED, BLOCKED, 'may search for an item here' )
@@ -101,35 +133,39 @@ def main():
     game.addTile( OutdoorTile, 'Patio', DOOR, OPEN, OPEN, HEDGE, NO_MESSAGE )
     game.addTile( OutdoorTile, 'Yard02', HEDGE, OPEN, OPEN, OPEN, NO_MESSAGE )
     game.addTile( OutdoorTile, 'Yard03', HEDGE, OPEN, OPEN, OPEN, NO_MESSAGE )
-
+    
     game.setStartTile( 'Foyer' )
     game.setTileAside( 'Patio' )
-
+    
     game.addItem( 'Oil' , None, "not sure", 1)
     game.addItem( 'Gasoline', None, "not sure", 1)
     game.addItem( 'Board with Nails', 2, "not sure", -1)
-    game.addItem( 'Machete', 3, "not sure", -1)
+    game.addItem( 'Machette', 3, "not sure", -1)
     game.addItem( 'Grisly Femur', 2, "not sure", -1)
     game.addItem( 'Golf Club', 2, "not sure", -1)
     game.addItem( 'Chainsaw', 2, "not sure", -1)
     game.addItem( 'Can of Soda', None, "not sure", 1)
     game.addItem( 'Candle', None, "not sure", 1)
-
-    game.addMessage( 'You try hard not to wet yourself', 0 )
-    game.addMessage( 'You sense your impending doom',  -1 )
-    game.addMessage( 'Something icky in your mouth', -1 )
-    game.addMessage( 'A bat poops in your eye', -1 )
-    game.addMessage( 'Your sould is not wanted here', -1 )
-    game.addMessage( 'Slip on nasty goo', -1 )
-    game.addMessage( 'The smell of blood is in the air', 0 )
-    game.addMessage( 'you hear terrible screams', 0 )
-    game.addMessage( 'Candy bar in your pocket', +1 )
-    game.addMessage( 'Your body shivers involuntarily', 0 )
-    game.addMessage( 'You feel a spark of hope', +1 )
-
-    displayAll()
-
-
+    
+    game.addActionCard(game.allItems['Oil'], ( 'You try hard not to wet yourself', 0 ), 'item', 6)
+    game.addActionCard(game.allItems['Gasoline'], 4, ( 'You sense your impending doom',  -1 ), 'item')
+    game.addActionCard(game.allItems['Board with Nails'], 'item', 4, ( 'Something icky in your mouth', -1 ))
+    game.addActionCard(game.allItems['Machette'], 4, ( 'A bat poops in your eye', -1 ), 6)
+    game.addActionCard(game.allItems['Grisly Femur'], 'item', 5, ( 'Your sould is not wanted here', -1 ))
+    game.addActionCard(game.allItems['Golf Club'], ( 'Slip on nasty goo', -1 ), 4, ( 'The smell of blood is in the air', 0 ))  
+    game.addActionCard(game.allItems['Chainsaw'], 3, ( 'you hear terrible screams', 0 ), 5)
+    game.addActionCard(game.allItems['Can of Soda'], ( 'Candy bar in your pocket', +1 ), 'item', 4)
+    game.addActionCard(game.allItems['Candle'], ( 'Your body shivers involuntarily', 0 ), ( 'You feel a spark of hope', +1 ), 4)
+    
+    print(game.player.name)
+    game.resetPlayer("Scott", 9)
+    game.saveGame("Save 1")
+    print(game.player.name)
+    game.resetPlayer()
+    print(game.player.name)
+    game.loadGame("Save 1")
+    print(game.player.name)
+    print game.viewSavedGames()
 
 if __name__ == '__main__':
     main()
