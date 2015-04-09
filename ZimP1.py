@@ -47,10 +47,32 @@ class Player(object):
         self.y = y
         self.health = health
         self.totem = totem
+        self.prevX = None
+        self.prevY = None
 
     def getLoc(self):
         return self.x,self.y
+    
+    def changeHealth(self, amount):
+        self.health += amount
 
+    def movePlayer(self, direction):
+        if (direction == "N"):
+            self.y += 1
+        elif (direction == "S"):
+            self.y -= 1
+        elif (direction == "E"):
+            self.x += 1
+        elif (direction == "W"):
+            self.x -= 1
+        else:
+            print "Not a valid direction"      
+            
+    def retreat(self):
+        self.x = self.prevX
+        self.y = self.prevY
+        self.health -= 1
+        
 
 class Item(object):
     def __init__(self, name, damage, message, uses):
@@ -70,7 +92,7 @@ class Game(object):
     def __init__(self, title, time):
         self.allIndoorTiles = {}
         self.allOutDoorTiles = {}
-        self.time = 9.00
+        self.time = 8.00
         self.actionCards = []
         self.actionCardsCurrent = []
         self.mapTiles = {}
@@ -130,9 +152,14 @@ class Game(object):
     def setStartTile(self):
         self.mapTiles[0,0] = self.allIndoorTiles.pop("Foyer")
     
-    def setNewTile(self,  name):
-        pass
-    
+    def setNewTile(self, type, ):
+        if(type == "indoor"):
+            tile = self.allIndoorTiles.pop( random.choice(self.allIndoorTilest.keys()) ) 
+        else:
+            tile = self.allIndoorTiles.pop( random.choice(self.allIndoorTilest.keys()) ) 
+            
+        mapTiles[self.player.x,self.player.y] = tile    
+        
     def addItem(self,  name , damage, message, uses):
         self.allItems[name] = Item(name, damage, message, uses)
     def addMessage(self, message, timeWasted):
@@ -141,15 +168,26 @@ class Game(object):
         self.actionCards.append(ActionCard(item, msgNine, msgTen, msgEleven))
         
     def shuffleCards(self):
-        cards = self.actionCards
-        cards.pop(random.randrange(0,9))
-        cards.pop(random.randrange(0,8))
-        self.actionCardsCurrent = cards
+        for item in self.actionCards:
+            self.actionCardsCurrent.append(item)
+        self.actionCardsCurrent.pop(random.randrange(0,9))
+        self.actionCardsCurrent.pop(random.randrange(0,8))
         
     def drawCard(self):
-        cardNo = (random.randrange(0, len(self.actionCardsCurrent)-1))
+        cardNo = (random.randrange(0, len(self.actionCardsCurrent)))
+        self.timeIncrease()
         return self.actionCardsCurrent.pop(cardNo)
     
+    def timeIncrease(self):
+        time = int(str(self.time).split('.')[1])
+        if (time == 54):
+            self.shuffleCards()
+            self.time = float(int(str(self.time).split('.')[0]) + 1)
+        else:
+            self.time += 0.09
+            
+        if (self.time == 12):
+            print ("Game Over")
     
     def newGame(self):
         pass
@@ -157,26 +195,13 @@ class Game(object):
     def wallCheck(direction):
         pass 
     
-    def movePlayer(self, direction):
-        if (direction == "N"):
-            self.player.y += 1
-        elif (direction == "S"):
-            self.player.y -= 1
-        elif (direction == "E"):
-            self.player.x += 1
-        elif (direction == "W"):
-            self.player.x -= 1
-        else:
-            print "Not a valid direction"
-            
     def waitHeal(self):
-        pass
-    
-    def runAway(self):
-        pass
+        self.timeIncrease()
+        self.player.changeHealth(3)
     
     def searchTotem(self):
-        pass
+        self.timeIncrease()
+        self.player.totem = True
     
     def buryTotem(self):
         pass
@@ -227,8 +252,12 @@ def main():
     game.addActionCard(game.allItems['Can of Soda'], ( 'Candy bar in your pocket', +1 ), 'item', 4)
     game.addActionCard(game.allItems['Candle'], ( 'Your body shivers involuntarily', 0 ), ( 'You feel a spark of hope', +1 ), 4)
     
-    game.setStartTile()
-    #######################################################################################################################
+    
+    game.shuffleCards()
+    
+    ##############################################################################################
+    
+    
     
     
     cmd = CMD(game)
