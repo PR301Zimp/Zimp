@@ -1,5 +1,6 @@
 from zimpDataInit import *
 from FileManager import *
+import random
 
 DOOR = OPEN = True
 BLOCKED = HEDGE = False
@@ -21,6 +22,13 @@ class Tile(object):
         self.South = south
         self.West = west
         self.Message = message
+        
+    def rotateTile(self, direction):
+        pass
+    
+    def breakOut(self):
+        pass
+        
 
 class IndoorTile(Tile):
     pass
@@ -73,23 +81,40 @@ class Game(object):
         fileManager.saveGame([self.allIndoorTiles, self.allOutDoorTiles, self.time, self.actionCards, self.actionCardsCurrent, self.map, self.allItems, self.player, self.turn], name)
     
     def loadGame(self, saveName):
+        """
+        >>> loadGame("save 5")
+        False
+        """
         fileManager = FileManager(FILE_NAME)
         data = fileManager.loadGame(saveName)
-        self.allIndoorTiles = data[0]
-        self.allOutDoorTiles = data[1]
-        self.time = data[2]
-        self.actionCards = data[3]
-        self.actionCardsCurrent = data[4]
-        self.map = data[5]
-        self.allItems = data[6]
-        self.player = data[7]
-        self.turn = data[8]         
+        if (data == "KeyError"):
+            #print "Save does not Exist"
+            return False
+        else:
+            self.allIndoorTiles = data[0]
+            self.allOutDoorTiles = data[1]
+            self.time = data[2]
+            self.actionCards = data[3]
+            self.actionCardsCurrent = data[4]
+            self.map = data[5]
+            self.allItems = data[6]
+            self.player = data[7]
+            self.turn = data[8] 
+            return True
+        
+    def clearSaves(self):
+         fileManager = FileManager(FILE_NAME)
+         fileManager.clearSaves()
         
     
     def viewSavedGames(self):
         fileManager = FileManager(FILE_NAME)
-        data = fileManager.savedGames
+        data = fileManager.savedGames()
         return data
+    
+    def delSave(self, saveName):
+        fileManager = FileManager(FILE_NAME)
+        data = fileManager.delSave(saveName)        
 
     def resetPlayer(self, name = 'Innocent Victim',  health = 6):
         self.player = Player(name=name, health=health)
@@ -110,6 +135,39 @@ class Game(object):
         pass
     def addActionCard(self, item, msgNine, msgTen, msgEleven):
         self.actionCards.append(ActionCard(item, msgNine, msgTen, msgEleven))
+        
+    def shuffleCards(self):
+        cards = self.actionCards
+        cards.pop(random.randrange(0,9+1))
+        cards.pop(random.randrange(0,8+1))
+        self.actionCardsCurrent = cards
+        
+        
+    def drawCard(self):
+        pass
+    
+    def addCard(self):
+        pass
+    
+    def newGame(self):
+        pass
+    
+    def movePlayer(self):
+        pass
+    
+    def waitHeal(self):
+        pass
+    
+    def runAway(self):
+        pass
+    
+    def searchTotem(self):
+        pass
+    
+    def buryTotem(self):
+        pass
+    
+
 
 def main():
     deleteAll()
@@ -157,15 +215,21 @@ def main():
     game.addActionCard(game.allItems['Can of Soda'], ( 'Candy bar in your pocket', +1 ), 'item', 4)
     game.addActionCard(game.allItems['Candle'], ( 'Your body shivers involuntarily', 0 ), ( 'You feel a spark of hope', +1 ), 4)
     
-    print(game.player.name)
-    game.resetPlayer("Scott", 9)
-    game.saveGame("Save 1")
-    print(game.player.name)
-    game.resetPlayer()
-    print(game.player.name)
-    game.loadGame("Save 1")
-    print(game.player.name)
-    print game.viewSavedGames()
+    
+    game.shuffleCards()
+    #print(game.player.name)
+    #game.resetPlayer("Scott", 9)
+    #game.saveGame("Save 2|")
+    #print game.viewSavedGames()
+    #print(game.player.name)
+    #game.resetPlayer()
+    #print(game.player.name)
+    #print game.loadGame("save 5")
+    #print(game.player.name)
+    #game.delSave("Save 2|")
+    #print game.viewSavedGames()
+    #game.clearSaves()
+    #print game.viewSavedGames()
 
 if __name__ == '__main__':
     main()
