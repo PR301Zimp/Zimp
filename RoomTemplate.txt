@@ -1,0 +1,14 @@
+                      XXnthroomXXX
+              ___________NNNNNN___________
+             |                            |
+             |                            |
+             |                            |
+             |                            |
+             W                            E
+XXwestroomXX W        XXroomnameXX        E XXeastroomXX
+             W                            E
+             |                            |
+             |                            |
+             |                            |
+             |___________SSSSSS___________|
+                      XXsthroomXXX
