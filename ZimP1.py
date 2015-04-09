@@ -1,5 +1,6 @@
 from zimpDataInit import *
 from FileManager import *
+from CMDClass import *
 import random
 
 DOOR = OPEN = True
@@ -28,6 +29,7 @@ class Tile(object):
     
     def breakOut(self):
         pass
+        
         
 
 class IndoorTile(Tile):
@@ -71,14 +73,14 @@ class Game(object):
         self.time = 9.00
         self.actionCards = []
         self.actionCardsCurrent = []
-        self.map = {}
+        self.mapTiles = {}
         self.allItems = {}
         self.player = Player()
-        self.turn = None 
+        self.phase = "New Game" 
         
     def saveGame(self, name):
         fileManager = FileManager(FILE_NAME)
-        fileManager.saveGame([self.allIndoorTiles, self.allOutDoorTiles, self.time, self.actionCards, self.actionCardsCurrent, self.map, self.allItems, self.player, self.turn], name)
+        fileManager.saveGame([self.allIndoorTiles, self.allOutDoorTiles, self.time, self.actionCards, self.actionCardsCurrent, self.mapTiles, self.allItems, self.player, self.phase], name)
     
     def loadGame(self, saveName):
         """
@@ -88,23 +90,22 @@ class Game(object):
         fileManager = FileManager(FILE_NAME)
         data = fileManager.loadGame(saveName)
         if (data == "KeyError"):
-            #print "Save does not Exist"
-            return False
+            print "Save does not Exist"
         else:
             self.allIndoorTiles = data[0]
             self.allOutDoorTiles = data[1]
             self.time = data[2]
             self.actionCards = data[3]
             self.actionCardsCurrent = data[4]
-            self.map = data[5]
+            self.mapTiles = data[5]
             self.allItems = data[6]
             self.player = data[7]
-            self.turn = data[8] 
+            self.phase = data[8] 
             return True
         
     def clearSaves(self):
-         fileManager = FileManager(FILE_NAME)
-         fileManager.clearSaves()
+        fileManager = FileManager(FILE_NAME)
+        fileManager.clearSaves()
         
     
     def viewSavedGames(self):
@@ -114,7 +115,8 @@ class Game(object):
     
     def delSave(self, saveName):
         fileManager = FileManager(FILE_NAME)
-        data = fileManager.delSave(saveName)        
+        data = fileManager.delSave(saveName)   
+
 
     def resetPlayer(self, name = 'Innocent Victim',  health = 6):
         self.player = Player(name=name, health=health)
@@ -125,10 +127,12 @@ class Game(object):
         elif(type == OutdoorTile):
             self.allOutDoorTiles[name] = OutdoorTile(name, north, east, south, west, message)
 
-    def setStartTile(self,  name ):
+    def setStartTile(self):
+        self.mapTiles[0,0] = self.allIndoorTiles.pop("Foyer")
+    
+    def setNewTile(self,  name):
         pass
-    def setTileAside(self,  name):
-        pass
+    
     def addItem(self,  name , damage, message, uses):
         self.allItems[name] = Item(name, damage, message, uses)
     def addMessage(self, message, timeWasted):
@@ -138,23 +142,33 @@ class Game(object):
         
     def shuffleCards(self):
         cards = self.actionCards
-        cards.pop(random.randrange(0,9+1))
-        cards.pop(random.randrange(0,8+1))
+        cards.pop(random.randrange(0,9))
+        cards.pop(random.randrange(0,8))
         self.actionCardsCurrent = cards
         
-        
     def drawCard(self):
-        pass
+        cardNo = (random.randrange(0, len(self.actionCardsCurrent)-1))
+        return self.actionCardsCurrent.pop(cardNo)
     
-    def addCard(self):
-        pass
     
     def newGame(self):
         pass
     
-    def movePlayer(self):
-        pass
+    def wallCheck(direction):
+        pass 
     
+    def movePlayer(self, direction):
+        if (direction == "N"):
+            self.player.y += 1
+        elif (direction == "S"):
+            self.player.y -= 1
+        elif (direction == "E"):
+            self.player.x += 1
+        elif (direction == "W"):
+            self.player.x -= 1
+        else:
+            print "Not a valid direction"
+            
     def waitHeal(self):
         pass
     
@@ -174,6 +188,7 @@ def main():
     game = Game( GAME_NAME, START_TIME )
     game.resetPlayer( 'Innocent Victim', 6 )
     
+    
     game.addTile( IndoorTile, 'Bathroom', DOOR, BLOCKED, BLOCKED, BLOCKED, NO_MESSAGE )
     game.addTile( IndoorTile, 'Kitchen', DOOR, DOOR, BLOCKED, DOOR, '+1 health if end move here' )
     game.addTile( IndoorTile, 'Storage', DOOR, BLOCKED, BLOCKED, BLOCKED, 'may search for an item here' )
@@ -191,9 +206,6 @@ def main():
     game.addTile( OutdoorTile, 'Patio', DOOR, OPEN, OPEN, HEDGE, NO_MESSAGE )
     game.addTile( OutdoorTile, 'Yard02', HEDGE, OPEN, OPEN, OPEN, NO_MESSAGE )
     game.addTile( OutdoorTile, 'Yard03', HEDGE, OPEN, OPEN, OPEN, NO_MESSAGE )
-    
-    game.setStartTile( 'Foyer' )
-    game.setTileAside( 'Patio' )
     
     game.addItem( 'Oil' , None, "not sure", 1)
     game.addItem( 'Gasoline', None, "not sure", 1)
@@ -215,21 +227,13 @@ def main():
     game.addActionCard(game.allItems['Can of Soda'], ( 'Candy bar in your pocket', +1 ), 'item', 4)
     game.addActionCard(game.allItems['Candle'], ( 'Your body shivers involuntarily', 0 ), ( 'You feel a spark of hope', +1 ), 4)
     
+    game.setStartTile()
+    #######################################################################################################################
     
-    game.shuffleCards()
-    #print(game.player.name)
-    #game.resetPlayer("Scott", 9)
-    #game.saveGame("Save 2|")
-    #print game.viewSavedGames()
-    #print(game.player.name)
-    #game.resetPlayer()
-    #print(game.player.name)
-    #print game.loadGame("save 5")
-    #print(game.player.name)
-    #game.delSave("Save 2|")
-    #print game.viewSavedGames()
-    #game.clearSaves()
-    #print game.viewSavedGames()
+    
+    cmd = CMD(game)
+    cmd.cmdloop()    
+    
 
 if __name__ == '__main__':
     main()

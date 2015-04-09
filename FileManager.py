@@ -29,6 +29,7 @@ class FileManager(object):
     def clearSaves(self):
         self.data = shelve.open(self.filePath)
         self.data.clear()
+        print ("Saves Cleared")
         
 
     def saveGame(self, state, name):
@@ -65,7 +66,8 @@ class FileManager(object):
             del self.data[save]
             return 0
         except KeyError:
-            return "KeyError"            
+            print ("Save does not exist")
+            return 1         
         
         
 #class unitTestCase(unittest.TestCase):
